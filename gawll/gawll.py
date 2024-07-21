@@ -35,6 +35,7 @@ class GAwLL:
             new_population = []
 
             fittest_individual = self.get_fittest_individual()
+            # print(fittest_individual.fitness,fittest_individual.chromosome)
             new_population.append(fittest_individual) # elitism: preserves fittest individual
 
             if(fittest_individual.fitness > last_change_highest_fitness + self.TAU_RESET_EPSILON):
