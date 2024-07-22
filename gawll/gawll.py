@@ -5,6 +5,52 @@ class Individual:
         self.chromosome = chromosome
         self.fitness = fitness
 
+class eVIGEdge:
+    def __init__(self, vertex, weight):
+        self.vertex=vertex
+        self.weight=weight
+
+class eVIGNode:
+    def __init__(self):
+        self.edges=[]
+
+    def add_or_replace_edge(self, vertex, weight):
+        found = False
+
+        for edge in self.edges:
+            if edge.vertex == vertex:
+                found = True
+                edge.weight = weight
+        
+        if(not found):
+            self.edges.append(eVIGEdge(vertex, weight))
+
+class eVIG:
+    def __init__(self, degree):
+        self.degree = degree
+
+        self._edge_frequency = [[0 for _ in range(degree)] for _ in range(degree)]
+        self._edge_weight_sum = [[0 for _ in range(degree)] for _ in range(degree)]
+        self._nodes = [eVIGNode() for _ in range(degree)]
+
+    def add_edge(self, a, b, w):
+        self._edge_weight_sum[a][b] += w
+        if(self._edge_frequency[a][b]>0):
+            w=self._edge_weight_sum[a][b]/self._edge_frequency[a][b]
+        self._edge_frequency[a][b]+=1
+
+        self._edge_weight_sum[b][a]=self._edge_weight_sum[a][b]
+        self._edge_frequency[b][a]=self._edge_frequency[a][b]
+
+        self._nodes[a].add_or_replace_edge(b,w)
+        self._nodes[b].add_or_replace_edge(a,w)
+
+    def print(self):
+        for index, node in enumerate(self._nodes):
+            print(f"  x_{index}:")
+            for edge in node.edges:
+                print(f"    x_{edge.vertex} ({edge.weight})")
+
 class GAwLL:
     # Constants
     POPULATION_SIZE=100
@@ -12,7 +58,8 @@ class GAwLL:
     CROSSOVER_RATE=0.4
 
     TAU_RESET_GENERATIONS=50
-    TAU_RESET_EPSILON=1.0e-10
+    
+    EPSILON=1.0e-10
 
     # Constructor
     def __init__(self, *, fitness_function, chrom_size, mutation_probability, max_generations):
@@ -38,7 +85,7 @@ class GAwLL:
             # print(fittest_individual.fitness,fittest_individual.chromosome)
             new_population.append(fittest_individual) # elitism: preserves fittest individual
 
-            if(fittest_individual.fitness > last_change_highest_fitness + self.TAU_RESET_EPSILON):
+            if(fittest_individual.fitness > last_change_highest_fitness + self.EPSILON):
                 last_change_generation = generation
                 last_change_highest_fitness = fittest_individual.fitness
 
