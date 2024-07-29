@@ -1,4 +1,4 @@
-import random
+import random, copy
 
 class Individual:
     def __init__(self, chromosome, fitness):
@@ -62,28 +62,28 @@ class GAwLL:
     EPSILON=1.0e-10
 
     # Constructor
-    def __init__(self, *, fitness_function, chrom_size, mutation_probability, max_generations):
+    def __init__(self, *, fitness_function, chrom_size, mutation_probability, max_generations, linkage_learning=True):
         self.fitness_function = fitness_function
         self.chrom_size = chrom_size
         self.mutation_probability = mutation_probability
         self.max_generations = max_generations
+        self.linkage_learning = linkage_learning
+
+        self.e_vig = eVIG(chrom_size)
+
 
     # Methods
     def run(self, seed):
         random.seed(seed)
 
-        self.initiatePopulation()
+        self.initializePopulation()
         # self.print_statistics()
 
         last_change_generation = 0
         last_change_highest_fitness = 0
 
         for generation in range(self.max_generations):
-            new_population = []
-
             fittest_individual = self.get_fittest_individual()
-            # print(fittest_individual.fitness,fittest_individual.chromosome)
-            new_population.append(fittest_individual) # elitism: preserves fittest individual
 
             if(fittest_individual.fitness > last_change_highest_fitness + self.EPSILON):
                 last_change_generation = generation
@@ -91,30 +91,80 @@ class GAwLL:
 
             if generation - last_change_generation > self.TAU_RESET_GENERATIONS:
                 last_change_generation = generation
-                self.initiatePopulation(fittest_individual=fittest_individual)
+                self.initializePopulation(fittest_individual=fittest_individual)
 
-            while (diff := len(self.population) - len(new_population)) > 0:
-                offspring1 = parent1 = self.selection()
+            if self.linkage_learning:
+                self.population = self.generation_ll(fittest_individual)
+            else:
+                self.population = self.generation(fittest_individual)
 
-                if diff > 1:
-                    offspring2 = parent2 = self.selection()
-
-                    if random.random() < self.CROSSOVER_RATE:
-                        offspring1, offspring2 = self.uniform_crossover(parent1, parent2)
-
-                    self.mutation(offspring1)
-                    self.mutation(offspring2)
-
-                    new_population.append(self.generate_individual(offspring1))
-                    new_population.append(self.generate_individual(offspring2))
-                else:
-                    self.mutation(offspring1)
-                    new_population.append(self.generate_individual(offspring1))
-
-            self.population = new_population
             # self.print_statistics()
 
-    def initiatePopulation(self, fittest_individual = None):
+
+    def generation(self, fittest_individual):
+        new_population = []
+
+        # elitism: preserves fittest individual
+        new_population.append(fittest_individual)
+
+        while (diff := len(self.population) - len(new_population)) > 0:
+            offspring1 = parent1 = self.selection()
+
+            if diff > 1:
+                offspring2 = parent2 = self.selection()
+
+                if random.random() < self.CROSSOVER_RATE:
+                    offspring1, offspring2 = self.uniform_crossover(parent1, parent2)
+
+                self.mutation(offspring1)
+                self.mutation(offspring2)
+
+                new_population.append(self.generate_individual(offspring1))
+                new_population.append(self.generate_individual(offspring2))
+            else:
+                self.mutation(offspring1)
+                new_population.append(self.generate_individual(offspring1))
+
+        return new_population
+
+
+    def generation_ll(self, fittest_individual):
+        new_population = []
+
+        # elitism: preserves fittest individual
+        new_population.append(fittest_individual)
+
+        # number of individuals for standard crossover and mutation
+        nc = int(self.POPULATION_SIZE * self.CROSSOVER_RATE)
+
+        while (diff := len(self.population) - len(new_population)) > 0:
+            offspring1 = parent1 = self.selection()
+
+            if len(new_population) < nc:
+                offspring2 = parent2 = self.selection()
+
+                if random.random() < self.CROSSOVER_RATE:
+                    offspring1, offspring2 = self.uniform_crossover(parent1, parent2)
+
+                self.mutation(offspring1)
+                self.mutation(offspring2)
+
+                new_population.append(self.generate_individual(offspring1))
+                new_population.append(self.generate_individual(offspring2))
+            elif diff > 2:
+                offspring1, offspring2, offspring3 = self.mutation_ll(parent1)
+
+                new_population.append(self.generate_individual(offspring1))
+                new_population.append(self.generate_individual(offspring2))
+                new_population.append(self.generate_individual(offspring3))
+            else:
+                self.mutation(offspring1)
+                new_population.append(self.generate_individual(offspring1))
+
+        return new_population
+
+
+    def initializePopulation(self, fittest_individual = None):
         population = []
 
         for _ in range(self.POPULATION_SIZE):
@@ -125,7 +175,8 @@ class GAwLL:
             population[0] = fittest_individual 
 
         self.population = population
-    
+
+   
     def generate_individual(self, chromosome):
         fitness = self.fitness_function(chromosome)
         return Individual(chromosome, fitness)
@@ -135,11 +186,13 @@ class GAwLL:
         for individual in self.population:
             print(individual.fitness, individual.chromosome)
 
+
     def print_statistics(self):
         fittest_individual = self.get_fittest_individual()
         average_fitness = self.get_average_fitness()
 
         print(f'Highest fitness is {fittest_individual.fitness}, average fitness is {average_fitness} across {len(self.population)} individuals')
+
 
     def get_average_fitness(self):
         if not self.population:
@@ -149,6 +202,7 @@ class GAwLL:
         average = total_fitness / len(self.population)
         
         return average
+
 
     def get_fittest_individual(self):
         if not self.population:
@@ -160,7 +214,8 @@ class GAwLL:
                 fittest_individual = individual
         
         return fittest_individual
-    
+
+
     def selection(self):
         individual_chosen = random.randint(0, self.POPULATION_SIZE - 1)
         
@@ -170,6 +225,7 @@ class GAwLL:
                 individual_chosen = individual_rand
         
         return self.population[individual_chosen].chromosome
+
 
     def uniform_crossover(self, parent1, parent2):
         chromosome1 = []
@@ -190,7 +246,38 @@ class GAwLL:
 
         return chromosome1, chromosome2
 
+
     def mutation(self, offspring):
         for gene in offspring:
             if random.random() < self.mutation_probability:
                 offspring[gene] = not offspring[gene]
+
+
+    def mutation_ll(self, parent):
+        xg = copy.deepcopy(parent)
+        xh = copy.deepcopy(parent)
+        xgh = copy.deepcopy(parent)
+
+        xg_mutation = random.randint(0, self.chrom_size - 1)
+
+        xh_mutation = random.randint(0, self.chrom_size - 2)
+        if xh_mutation >= xg_mutation:
+            xh_mutation += 1
+
+        fx = self.fitness_function(parent)
+
+        xg[xg_mutation] = not xg[xg_mutation]
+        fxg = self.fitness_function(xg)
+        
+        xh[xh_mutation] = not xh[xh_mutation]
+        fxh = self.fitness_function(xh)
+
+        xgh[xg_mutation] = not xgh[xg_mutation]
+        xgh[xh_mutation] = not xgh[xh_mutation]
+        fxgh = self.fitness_function(xgh)
+
+        df=abs(fxgh-fxh-fxg+fx)
+        if df > self.EPSILON:
+            self.e_vig.add_edge(xg_mutation, xh_mutation, df)
+        
+        return xg, xh, xgh
