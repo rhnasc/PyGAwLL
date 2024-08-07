@@ -1,14 +1,23 @@
+import os
 import numpy as np
+from enum import Enum
+
+BASE_DIR = os.path.dirname(__file__)
+DATASETS = {
+    "zoo": os.path.join(BASE_DIR, "datasets", "zoo.dat"),
+    "housing": os.path.join(BASE_DIR, "datasets", "housing.dat"),
+}
+
+
+class DatasetType(Enum):
+    CLASSIFICATION = "classification"
+    REGRESSION = "regression"
 
 
 class Util:
-    DATASETS = {
-        "zoo": "/Users/renato.nascimento/mba/tcc/implementation/GAwLL/zoo.dat",
-    }
-
     def read_dataset(dataset_name):
         try:
-            with open(Util.DATASETS[dataset_name], "r") as fin:
+            with open(DATASETS[dataset_name], "r") as fin:
                 lines = fin.readlines()
         except FileNotFoundError:
             print("file name error")
@@ -84,15 +93,18 @@ class Util:
         X_testset = X_dataset[n_examples_train:]
 
         if prob_type == 1:
+            dataset_type = DatasetType.CLASSIFICATION
             d_trainset = d_dataset[:n_examples_train]
             d_testset = d_dataset[n_examples_train:]
         else:
+            dataset_type = DatasetType.REGRESSION
             d_trainset_regression = d_dataset_regression[:n_examples_train]
             d_testset_regression = d_dataset_regression[n_examples_train:]
 
         # print("Dataset successfully read and split.")
 
         return (
+            dataset_type,
             chrom_size,
             X_trainset,
             d_trainset if prob_type == 1 else d_trainset_regression,

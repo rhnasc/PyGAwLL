@@ -9,17 +9,18 @@ sys.path.insert(
 )
 
 from gawll import GAwLL
-from util import Util
+from util import Util, DatasetType
+from enum import Enum
 
 import numpy as np
 from collections import Counter
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 
 
 class KNN:
-    def __init__(self, k=3):
+    def __init__(self, k=3, dataset_type=DatasetType.CLASSIFICATION):
         self.k = k
+        self._dataset_type = dataset_type
 
     def fit(self, X, y):
         self.X_train = X
@@ -45,27 +46,38 @@ class KNN:
         k_indices = np.argsort(distances)[: self.k]
         k_nearest_labels = [self.y_train[i] for i in k_indices]
 
-        counter = Counter(k_nearest_labels)
+        if self._dataset_type == DatasetType.CLASSIFICATION:
+            counter = Counter(k_nearest_labels)
 
-        # When no label has a majority, select the numerically smallest label
-        # This behavior mimics the KNN implemented on https://github.com/rtinos/GAwLL
-        # and allows for a closer comparison with this re-implementation
-        most_common_elements = counter.most_common()
-        max_count = most_common_elements[0][1]
-        result = min(elem for elem, count in most_common_elements if count == max_count)
+            # When no label has a majority, select the numerically smallest label
+            # This behavior mimics the KNN implemented on https://github.com/rtinos/GAwLL
+            # and allows for a closer comparison with this re-implementation
+            most_common_elements = counter.most_common()
+            max_count = most_common_elements[0][1]
+            result = min(
+                elem for elem, count in most_common_elements if count == max_count
+            )
+        elif self._dataset_type == DatasetType.REGRESSION:
+            result = np.mean(k_nearest_labels)
 
         return result
 
     def evaluate(self, X_test, y_test, dimensions=None):
         y_pred = self.predict(X_test, dimensions)
-        accuracy = accuracy_score(y_test, y_pred)
-        return accuracy
+        if self._dataset_type == DatasetType.CLASSIFICATION:
+            accuracy = accuracy_score(y_test, y_pred)
+            return accuracy
+        elif self._dataset_type == DatasetType.REGRESSION:
+            mse = mean_squared_error(y_test, y_pred)
+            return mse
 
 
 def main():
+    # ds = "zoo"
+    ds = "housing"
 
-    (chrom_size, X_trainset, d_trainset, X_testset, d_testset) = Util.read_dataset(
-        "zoo"
+    (dataset_type, chrom_size, X_trainset, d_trainset, X_testset, d_testset) = (
+        Util.read_dataset(ds)
     )
 
     # Total number of runs
@@ -75,7 +87,7 @@ def main():
     # Maximum number of generations
     max_generations = 100
 
-    knn = KNN()
+    knn = KNN(dataset_type=dataset_type)
     knn.fit(X_trainset, d_trainset)
 
     fitness_function = lambda chromosome: 0.98 * knn.evaluate(
