@@ -92,7 +92,7 @@ def main():
 
     fitness_function = lambda chromosome: 0.98 * knn.evaluate(
         X_testset, d_testset, dimensions=chromosome
-    ) + 0.02 * (sum(chromosome) / len(chromosome))
+    ) + 0.02 * (1 - sum(chromosome) / len(chromosome))
 
     instance = GAwLL(
         fitness_function=fitness_function,
