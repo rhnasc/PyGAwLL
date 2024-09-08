@@ -88,7 +88,7 @@ class GAwLL:
     def run(self, seed):
         random.seed(seed)
 
-        self.initializePopulation()
+        self.initialize_population()
         # self.print_statistics()
 
         last_change_generation = 0
@@ -103,7 +103,7 @@ class GAwLL:
 
             if generation - last_change_generation > self.TAU_RESET_GENERATIONS:
                 last_change_generation = generation
-                self.initializePopulation(fittest_individual=fittest_individual)
+                self.initialize_population(fittest_individual=fittest_individual)
 
             if self.linkage_learning:
                 self.population = self.generation_ll(fittest_individual)
@@ -176,7 +176,7 @@ class GAwLL:
 
         return new_population
 
-    def initializePopulation(self, fittest_individual=None):
+    def initialize_population(self, fittest_individual=None):
         population = []
 
         for _ in range(self.POPULATION_SIZE):
