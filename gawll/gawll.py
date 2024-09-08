@@ -110,7 +110,10 @@ class GAwLL:
             else:
                 self.population = self.generation(fittest_individual)
 
+            # print(f"...{generation}", end='\r')
             # self.print_statistics()
+        # self.e_vig.print()
+
 
     def generation(self, fittest_individual):
         new_population = []

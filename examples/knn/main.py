@@ -73,8 +73,8 @@ class KNN:
 
 
 def main():
-    # ds = "zoo"
-    ds = "housing"
+    ds = "zoo"
+    # ds = "housing"
 
     (dataset_type, chrom_size, X_trainset, d_trainset, X_testset, d_testset) = (
         Util.read_dataset(ds)
@@ -85,7 +85,7 @@ def main():
     # Mutation Rate
     mutation_probability = 1.0 / chrom_size
     # Maximum number of generations
-    max_generations = 100
+    max_generations = 2000
 
     knn = KNN(dataset_type=dataset_type)
     knn.fit(X_trainset, d_trainset)
