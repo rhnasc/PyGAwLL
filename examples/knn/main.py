@@ -37,10 +37,11 @@ class KNN:
         # Predict every sample in the test set individually
         predictions = [self._predict(x, X_train) for x in X]
         return np.array(predictions)
-
+    
     def _predict(self, x, X_train):
         # Calculate euclidian norm on vector difference
-        distances = [np.linalg.norm(x - x_train) for x_train in X_train]
+        # distances = [np.linalg.norm(x - x_train) for x_train in X_train]
+        distances = np.linalg.norm(X_train - x, axis=1)
 
         # Select K closest labels
         k_indices = np.argsort(distances)[: self.k]

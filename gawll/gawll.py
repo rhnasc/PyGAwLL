@@ -98,7 +98,7 @@ class GAwLL:
         random.seed(seed)
 
         self.initialize_population()
-        # self.print_statistics()
+        self.print_statistics()
 
         last_change_generation = 0
         last_change_highest_fitness = 0
@@ -121,6 +121,7 @@ class GAwLL:
 
             print(f"...{generation}", end="\r")
             # self.print_statistics()
+        self.print_statistics()
         # self.e_vig.print()
 
     def generation(self, fittest_individual):
