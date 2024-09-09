@@ -1,4 +1,5 @@
-import random, copy
+import random, copy, cachetools
+from cachetools import LRUCache
 
 
 class Individual:
@@ -66,6 +67,8 @@ class GAwLL:
 
     EPSILON = 1.0e-10
 
+    FITNESS_FUNCTION_CACHE_LIMIT = 10e4
+
     # Constructor
     def __init__(
         self,
@@ -76,7 +79,13 @@ class GAwLL:
         max_generations,
         linkage_learning=True,
     ):
-        self.fitness_function = fitness_function
+        cache = LRUCache(maxsize=self.FITNESS_FUNCTION_CACHE_LIMIT)
+
+        self.fitness_function = lambda chromosome: cache.get(
+            tuple(chromosome),
+            cache.setdefault(tuple(chromosome), fitness_function(chromosome)),
+        )
+
         self.chrom_size = chrom_size
         self.mutation_probability = mutation_probability
         self.max_generations = max_generations
@@ -110,10 +119,9 @@ class GAwLL:
             else:
                 self.population = self.generation(fittest_individual)
 
-            # print(f"...{generation}", end='\r')
+            print(f"...{generation}", end="\r")
             # self.print_statistics()
         # self.e_vig.print()
-
 
     def generation(self, fittest_individual):
         new_population = []
