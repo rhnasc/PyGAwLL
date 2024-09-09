@@ -14,7 +14,48 @@ from enum import Enum
 
 import numpy as np
 from collections import Counter
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error
+
+class SkLearn_KNN:
+    def __init__(self, k=3, dataset_type=DatasetType.CLASSIFICATION):
+        self.k = k
+        self._dataset_type = dataset_type
+        
+
+    def fit(self, X, y):
+        self.X_train = X
+        self.y_train = y
+        
+
+    def predict(self, X, dimensions=None):
+        if self._dataset_type == DatasetType.CLASSIFICATION:
+            model = KNeighborsClassifier(n_neighbors=self.k)
+        elif self._dataset_type == DatasetType.REGRESSION:
+            model = KNeighborsRegressor(n_neighbors=self.k)
+
+        if dimensions is not None:
+            X_train = self.X_train[:, dimensions]
+            X = X[:, dimensions]
+        else:
+            X_train = self.X_train
+            
+        model.fit(X_train, self.y_train)
+        return model.predict(X)
+
+    def evaluate(self, X_test, y_test, dimensions=None):
+        if not np.any(dimensions):
+            return 0.0
+
+        y_pred = self.predict(X_test, dimensions)
+        
+        if self._dataset_type == DatasetType.CLASSIFICATION:
+            accuracy = accuracy_score(y_test, y_pred)
+            return accuracy
+        elif self._dataset_type == DatasetType.REGRESSION:
+            mse = mean_squared_error(y_test, y_pred)
+            return mse
+
 
 
 class KNN:
