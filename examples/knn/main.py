@@ -146,6 +146,7 @@ def main():
     for i in range(total_runs):
         instance.run(i + 1)
 
+    Util.save_statistics(ds, "knn", instance.statistics)
 
 if __name__ == "__main__":
     main()

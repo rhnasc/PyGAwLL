@@ -50,11 +50,23 @@ class eVIG:
         self._nodes[a].add_or_replace_edge(b, w)
         self._nodes[b].add_or_replace_edge(a, w)
 
+    def adjacency_matrix(self):
+        return [[edge.weight for edge in node.edges] for node in self._nodes]
+
     def print(self):
         for index, node in enumerate(self._nodes):
             print(f"  x_{index}:")
             for edge in node.edges:
                 print(f"    x_{edge.vertex} ({edge.weight})")
+
+
+class Statistics:
+    def __init__(self):
+        self.best_individual_per_run = []
+        self.evig_per_run = []
+
+        self.initial_bfi_per_run = []
+        self.initial_mean_fitness_per_run = []
 
 
 class GAwLL:
@@ -91,14 +103,17 @@ class GAwLL:
         self.max_generations = max_generations
         self.linkage_learning = linkage_learning
 
-        self.e_vig = eVIG(chrom_size)
+        self.statistics = Statistics()
 
     # Methods
     def run(self, seed):
         random.seed(seed)
 
         self.initialize_population()
-        self.print_statistics()
+        self.e_vig = eVIG(self.chrom_size)
+
+        self.statistics.initial_bfi_per_run.append(self.get_fittest_individual())
+        self.statistics.initial_mean_fitness_per_run.append(self.get_average_fitness())
 
         last_change_generation = 0
         last_change_highest_fitness = 0
@@ -119,10 +134,8 @@ class GAwLL:
             else:
                 self.population = self.generation(fittest_individual)
 
-            print(f"...{generation}", end="\r")
-            # self.print_statistics()
-        self.print_statistics()
-        # self.e_vig.print()
+        self.statistics.best_individual_per_run.append(self.get_fittest_individual())
+        self.statistics.evig_per_run.append(self.e_vig)
 
     def generation(self, fittest_individual):
         new_population = []

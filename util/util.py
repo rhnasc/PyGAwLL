@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import csv
 from enum import Enum
 
 BASE_DIR = os.path.dirname(__file__)
@@ -111,3 +112,31 @@ class Util:
             X_testset,
             d_testset if prob_type == 1 else d_testset_regression,
         )
+
+    def save_statistics(dataset_name, algorithm, statistics):
+        path = "output"
+        with open(f"{path}/bfi_{dataset_name}_{algorithm}.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for individual in statistics.best_individual_per_run:
+                writer.writerow([individual.fitness])
+
+        with open(f"{path}/bind_{dataset_name}_{algorithm}.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for individual in statistics.best_individual_per_run:
+                writer.writerow([int(gene) for gene in individual.chromosome])
+
+        with open(f"{path}/initial_bfi_{dataset_name}_{algorithm}.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for individual in statistics.initial_bfi_per_run:
+                writer.writerow([individual.fitness])
+
+        with open(f"{path}/initial_mean_{dataset_name}_{algorithm}.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for fitness in statistics.initial_mean_fitness_per_run:
+                writer.writerow([fitness])
+
+        for index, evig in enumerate(statistics.evig_per_run):
+            with open(f"{path}/eVIG_{dataset_name}_{algorithm}_r{index}.csv", mode='w', newline='') as file:
+                writer = csv.writer(file)
+                for weights in evig.adjacency_matrix():
+                    writer.writerow(f"{weight:.6f}" for weight in weights)
