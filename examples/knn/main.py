@@ -69,7 +69,7 @@ def main():
     # Mutation Rate
     mutation_probability = 1.0 / chrom_size
     # Maximum number of generations
-    max_generations = 2000
+    max_generations = 50
 
     knn = KNN(dataset_type=dataset_type)
     knn.fit(X_trainset, d_trainset)
