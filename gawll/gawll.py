@@ -141,7 +141,7 @@ class GAwLL:
         new_population = []
 
         # elitism: preserves fittest individual
-        new_population.append(fittest_individual)
+        new_population.append(self.generate_individual(fittest_individual.chromosome.copy()))
 
         while (diff := len(self.population) - len(new_population)) > 0:
             offspring1 = parent1 = self.selection()
@@ -167,7 +167,7 @@ class GAwLL:
         new_population = []
 
         # elitism: preserves fittest individual
-        new_population.append(fittest_individual)
+        new_population.append(self.generate_individual(fittest_individual.chromosome.copy()))
 
         # number of individuals for standard crossover and mutation
         nc = int(self.POPULATION_SIZE * self.CROSSOVER_RATE)
@@ -257,7 +257,7 @@ class GAwLL:
             ):
                 individual_chosen = individual_rand
 
-        return self.population[individual_chosen].chromosome
+        return self.population[individual_chosen].chromosome.copy()
 
     def uniform_crossover(self, parent1, parent2):
         chromosome1 = []
@@ -284,9 +284,9 @@ class GAwLL:
                 offspring[gene] = not offspring[gene]
 
     def mutation_ll(self, parent):
-        xg = copy.deepcopy(parent)
-        xh = copy.deepcopy(parent)
-        xgh = copy.deepcopy(parent)
+        xg = parent.copy()
+        xh = parent.copy()
+        xgh = parent.copy()
 
         xg_mutation = random.randint(0, self.chrom_size - 1)
 
