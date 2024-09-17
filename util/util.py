@@ -139,4 +139,4 @@ class Util:
             with open(f"{path}/eVIG_{dataset_name}_{algorithm}_r{index}.csv", mode='w', newline='') as file:
                 writer = csv.writer(file)
                 for weights in evig.adjacency_matrix():
-                    writer.writerow(f"{weight:.6f}" for weight in weights)
+                    writer.writerow(f" {weight:.5f}" for weight in weights)

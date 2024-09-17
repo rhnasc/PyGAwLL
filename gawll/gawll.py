@@ -51,7 +51,14 @@ class eVIG:
         self._nodes[b].add_or_replace_edge(a, w)
 
     def adjacency_matrix(self):
-        return [[edge.weight for edge in node.edges] for node in self._nodes]
+        adjacency = [[0 for _ in range(self.degree)] for _ in range(self.degree)]
+        
+        for i in range(self.degree):
+            for j in range(self.degree):
+                if self._edge_frequency[i][j] != 0:
+                    adjacency[i][j] = self._edge_weight_sum[i][j] / self._edge_frequency[i][j]
+        
+        return adjacency
 
     def print(self):
         for index, node in enumerate(self._nodes):
